@@ -7,7 +7,7 @@ import secrets
 import requests
 from datetime import datetime, timezone
 import hashlib # Keep for fallback
-
+from bson.objectid import ObjectId # Add this import
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -104,6 +104,12 @@ try:
     db = database.get_db()
     if db is None:
         print("⚠️ database.get_db() returned None")
+        
+    # --- IMPORTANT: Run this command ONCE in your MongoDB shell ---
+    # db.together_spaces.create_index("created_at", expireAfterSeconds=300)
+    # This creates the 5-minute (300 sec) auto-expiry for chat spaces
+    # -------------------------------------------------------------
+        
 except Exception as e:
     print("🔥 Database initialization error:", e)
     db = None
@@ -921,6 +927,155 @@ def forget_memory_route():
 
 
 # -----------------------
+# API: Together Spaces
+# -----------------------
+SPACE_DURATION_SECONDS = 300 # 5 minutes
+
+@app.route("/api/together/create", methods=["POST"])
+def create_together_space():
+    data = request.json or {}
+    space_name = data.get("space_name")
+    password = data.get("password")
+    if not space_name or not password:
+        return jsonify({"success": False, "message": "Space name and password required."}), 400
+    
+    try:
+        # Check if space name is already taken (and not expired)
+        existing = db.together_spaces.find_one({"name": space_name})
+        if existing:
+            return jsonify({"success": False, "message": "This space name is already taken. Try another."}), 409
+        
+        hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+        now = datetime.now(timezone.utc)
+        
+        space_doc = {
+            "name": space_name,
+            "hashed_password": hashed,
+            "created_at": now,
+            "history": [{
+                "sender": "luvisa",
+                "message": f"Welcome to '{space_name}'! This space will close in 5 minutes. Let's chat! 😊",
+                "timestamp": now
+            }]
+        }
+        
+        result = db.together_spaces.insert_one(space_doc)
+        space_id = str(result.inserted_id)
+        expires_at_timestamp = int(now.timestamp()) + SPACE_DURATION_SECONDS
+        
+        return jsonify({
+            "success": True, 
+            "message": "Space created!", 
+            "space_id": space_id,
+            "expires_at": expires_at_timestamp
+        }), 201
+
+    except Exception as e:
+        print(f"🔥 Error creating space: {e}")
+        return jsonify({"success": False, "message": "A server error occurred."}), 500
+
+@app.route("/api/together/join", methods=["POST"])
+def join_together_space():
+    data = request.json or {}
+    space_name = data.get("space_name")
+    password = data.get("password")
+    if not space_name or not password:
+        return jsonify({"success": False, "message": "Space name and password required."}), 400
+
+    try:
+        space = db.together_spaces.find_one({"name": space_name})
+        if not space:
+            return jsonify({"success": False, "message": "Space not found. It may have expired."}), 404
+        
+        # Check password
+        if not bcrypt.checkpw(password.encode("utf-8"), space["hashed_password"]):
+            return jsonify({"success": False, "message": "Invalid password."}), 401
+        
+        space_id = str(space["_id"])
+        expires_at_timestamp = int(space["created_at"].timestamp()) + SPACE_DURATION_SECONDS
+        
+        return jsonify({
+            "success": True, 
+            "message": "Joined space!", 
+            "space_id": space_id,
+            "expires_at": expires_at_timestamp
+        }), 200
+
+    except Exception as e:
+        print(f"🔥 Error joining space: {e}")
+        return jsonify({"success": False, "message": "A server error occurred."}), 500
+
+@app.route("/api/together/chat", methods=["POST"])
+def chat_in_together_space():
+    data = request.json or {}
+    space_id = data.get("space_id")
+    text = data.get("text")
+    if not space_id or not text:
+        return jsonify({"success": False, "message": "Space ID and text required."}), 400
+    
+    try:
+        now = datetime.now(timezone.utc)
+        user_message = {"sender": "user", "message": text, "timestamp": now}
+        
+        # Find the space
+        space = db.together_spaces.find_one({"_id": ObjectId(space_id)})
+        if not space:
+            return jsonify({"success": False, "message": "Space not found or expired."}), 404
+        
+        # Add user message
+        db.together_spaces.update_one(
+            {"_id": ObjectId(space_id)},
+            {"$push": {"history": user_message}}
+        )
+        
+        # Get history for AI
+        history_docs = space.get("history", [])
+        history = [{"sender": r.get("sender"), "message": r.get("message", "")} for r in history_docs]
+        history.append({"sender": "user", "message": text}) # Add current message
+        
+        # Call AI (using "The Group" as the user name)
+        reply = chat_with_model(text, history, "my friends")
+        enhanced = add_emojis_to_response(reply)
+        
+        # Add AI message
+        ai_message = {"sender": "luvisa", "message": enhanced, "timestamp": datetime.now(timezone.utc)}
+        db.together_spaces.update_one(
+            {"_id": ObjectId(space_id)},
+            {"$push": {"history": ai_message}}
+        )
+        
+        return jsonify({"success": True, "reply": enhanced}), 200
+
+    except Exception as e:
+        print(f"🔥 Error in together chat: {e}")
+        return jsonify({"success": False, "message": "Server error."}), 500
+
+@app.route("/api/together/history", methods=["GET"])
+def get_together_history():
+    space_id = request.args.get("space_id")
+    if not space_id:
+        return jsonify({"success": False, "message": "Space ID required."}), 400
+    
+    try:
+        space = db.together_spaces.find_one({"_id": ObjectId(space_id)})
+        if not space:
+            return jsonify({"success": False, "message": "Space not found or expired."}), 404
+        
+        history = space.get("history", [])
+        formatted = [{
+            "sender": r["sender"], 
+            "message": r["message"], 
+            "time": r.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") if r.get("timestamp") else ""
+        } for r in history]
+        
+        return jsonify({"success": True, "history": formatted}), 200
+    
+    except Exception as e:
+        print(f"🔥 Error getting history: {e}")
+        return jsonify({"success": False, "message": "Server error."}), 500
+
+
+# -----------------------
 # Frontend routes
 # -----------------------
 @app.route("/")
@@ -946,6 +1101,11 @@ def serve_signup():
 @app.route("/profile")
 def serve_profile():
     return send_from_directory(STATIC_FOLDER, "profile.html")
+
+
+@app.route("/together")
+def serve_together():
+    return send_from_directory(STATIC_FOLDER, "together.html")
 
 
 # -----------------------
