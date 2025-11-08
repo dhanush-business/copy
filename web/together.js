@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- UPDATED FUNCTION ---
+    // --- THIS FUNCTION IS NOW FIXED ---
     async function sendMessage() {
         const text = userInput.value.trim();
         if (!text || !currentSpaceId) return;
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Send network error:', err);
         }
     }
-    // --- END UPDATED FUNCTION ---
+    // --- END OF FIXED FUNCTION ---
 
 
     // --- Helper Functions (copied from script.js) ---
@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const dateStr = atTime.includes('T') ? atTime : atTime.replace(' ', 'T') + 'Z';
             const dt = new Date(dateStr);
-            if (isNaN(dt.getTime())) return atTime;
+            if (isNaN(dt.getTime())) return atDmy.l.s.time;
             return dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } catch (e) {
             return atTime;
