@@ -1,0 +1,315 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    
+    background-image: url('backgrounds/bg9.jpg'); /* You can change this path */
+    background-size: cover;
+    background-position: center;
+    overflow: hidden; /* Prevents scroll */
+}
+
+/* --- UPDATED: This is now the main layout container --- */
+.card-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    animation: fadeIn 0.8s ease-in-out;
+    background: transparent;
+    padding: 20px;
+}
+
+/* --- NEW: Wrapper for just the card and its buttons --- */
+.profile-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: -7px; /* Space between card, message, and buttons */
+}
+
+/* --- The Main ID Card --- */
+.id-card {
+    width: 320px;
+    height: 480px; /* Readjusted height */
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- Top Gradient Section --- */
+.card-top {
+    height: 30%; 
+    background: linear-gradient(135deg, #00c9ff, #92fe9d);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 15px;
+    color: white;
+}
+.card-top::before, .card-top::after {
+    content: ''; position: absolute; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1); z-index: 0;
+}
+.card-top::before { width: 150px; height: 150px; top: -50px; left: -50px; }
+.card-top::after { width: 200px; height: 200px; bottom: -80px; right: -60px; }
+.card-top-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.9em; font-weight: 500; z-index: 1;
+}
+.luvisa-logo-small { width: 24px; height: 24px; border-radius: 50%; }
+
+/* --- Overlapping Avatar --- */
+.avatar-wrapper {
+    position: absolute;
+    top: 18%; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px; height: 110px; border-radius: 50%;
+    border: 5px solid white; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    cursor: pointer; z-index: 10; overflow: hidden;
+}
+.avatar-preview { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+.avatar-overlay {
+    position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5);
+    display: flex; justify-content: center; align-items: center;
+    color: white; font-size: 1.8em; opacity: 0; transition: opacity 0.3s ease;
+}
+.avatar-wrapper:hover .avatar-preview { transform: scale(1.1); }
+.avatar-wrapper:hover .avatar-overlay { opacity: 1; }
+
+/* --- Bottom White Section --- */
+.card-bottom {
+    height: 70%; 
+    background: #ffffff;
+    padding: 70px 30px 20px 30px; 
+    display: flex;
+    flex-direction: column;
+    color: #333;
+}
+
+/* --- User Details Section --- */
+.user-details {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card-name, .card-status {
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    width: 100%;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent; /* Hidden underline */
+}
+
+.card-name {
+    font-size: 1.6em;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 4px;
+}
+
+.card-status {
+    font-size: 0.9em;
+    font-weight: 400;
+    color: #777;
+    resize: none;
+    height: 24px;
+}
+
+/* Show an underline when user clicks to edit */
+.card-name:focus, .card-status:focus {
+    border-bottom: 2px solid #00c9ff;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 15px;
+    font-size: 0.85em;
+    margin-top: auto; /* Pushes to bottom */
+}
+.info-grid span:nth-child(odd) { font-weight: 600; color: #888; }
+.info-grid span:nth-child(even) { font-weight: 500; text-align: right; }
+
+/* --- REMOVED .barcode-number style --- */
+
+
+/* --- Action Buttons (Below Card) --- */
+.button-group { 
+    display: flex; 
+    gap: 15px; 
+    width: 320px; 
+}
+button { 
+    flex-grow: 1; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 12px;
+    font-size: 1em; 
+    font-weight: 600; 
+    font-family: 'Poppins', sans-serif; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    position: relative; 
+    overflow: hidden; 
+}
+.primary-btn { background: linear-gradient(135deg, #00c9ff, #92fe9d); color: white; box-shadow: 0 4px 15px rgba(0, 201, 255, 0.4); }
+.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 201, 255, 0.6); }
+.secondary-btn { background: #f0f0f0; color: #555; }
+.secondary-btn:hover { background: #e0e0e0; }
+
+/* --- THIS IS THE FIX --- */
+.save-message { 
+    text-align: center; 
+    min-height: 18px; 
+    font-size: 0.9em;
+    color: #fff; /* --- CHANGED from #333 --- */
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5); /* --- Added shadow --- */
+}
+.save-message.success { 
+    color: #92fe9d; /* Brighter green */
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+.save-message.error { 
+    color: #ff8a8a; /* Brighter red */
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Loading Spinner */
+button.loading span { visibility: hidden; opacity: 0; }
+button.loading::after {
+    content: ''; position: absolute; width: 20px; height: 20px; top: 0; left: 0; right: 0; bottom: 0; margin: auto;
+    border: 3px solid transparent; border-top-color: #ffffff; border-radius: 50%; animation: spin 1s ease infinite;
+}
+
+@keyframes spin { from { transform: rotate(0turn); } to { transform: rotate(1turn); } }
+@keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* --- NEW: Gold Ribbon Badge Style --- */
+.early-user-badge {
+    position: relative;
+    background: linear-gradient(to right, #fceabb, #f8b500, #fceabb);
+    color: #614a1a;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 5px 15px;
+    margin: 8px auto 0 auto;
+    display: inline-block;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.15);
+}
+.early-user-badge::before,
+.early-user-badge::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    /* Creates the "V" cut shape */
+    border-width: 12px 8px 12px 8px; /* 12px is half of height (24px) */
+}
+.early-user-badge::before {
+    left: -16px; /* Moves the tail out */
+    border-color: #f8b500 #f8b500 #f8b500 transparent;
+}
+.early-user-badge::after {
+    right: -16px; /* Moves the tail out */
+    border-color: #f8b500 transparent #f8b500 #f8b500;
+}
+
+
+/* --- NEW: QR Code Wrapper (Right Column) --- */
+.qr-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    padding: 30px;
+    border-radius: 20px;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+.qr-wrapper h3 {
+    margin: 0;
+    font-weight: 500;
+    opacity: 0.9;
+}
+.qr-code-container {
+    width: 200px;
+    height: 200px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 8px;
+}
+.qr-code-container img {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 4px;
+}
+.share-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 1em;
+}
+.share-btn i {
+    font-size: 1.2em;
+}
+
+/* --- NEW: QR-Only View (for scanning) --- */
+body.qr-view {
+    background: none; /* Hide background */
+}
+body.qr-view .profile-wrapper {
+    gap: 0; /* Remove gaps */
+}
+body.qr-view .qr-wrapper,
+body.qr-view .button-group,
+body.qr-view .save-message {
+    display: none; /* Hide QR box, buttons, and message */
+}
+body.qr-view .id-card {
+    /* Re-add shadow so it "floats" */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive: On small screens, stack the card and QR code */
+@media (max-width: 768px) {
+    body {
+        height: auto; /* Allow scrolling on mobile */
+        padding: 20px 0;
+    }
+    .card-container {
+        flex-direction: column;
+    }
+    .profile-wrapper {
+        order: 1; /* Show card first */
+    }
+    .qr-wrapper {
+        order: 2; /* Show QR below */
+        width: 320px;
+    }
+}

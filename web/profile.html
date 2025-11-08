@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Friendix ID</title>
+    <meta name="google-site-verification" content="6mJj6E39N-ihd-lAwxij3MIcwh8Z7b4XRJh8lzW8GFg" />
+<meta name="description" content="Friendix.ai is your AI-powered friend that listens, supports, and chats with you — blending emotional intelligence with technology.">
+<meta name="keywords" content="AI friend, Friendix, chatbot, AI companion, emotional support AI, friend-like AI, personal assistant">
+<meta name="author" content="Dhanush">
+
+<meta property="og:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+<meta property="og:description" content="Chat with Friendix.ai — your AI companion that listens, cares, and helps.">
+<meta property="og:url" content="https://friendix-ai.onrender.com">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+<meta name="twitter:description" content="Meet Friendix.ai — your AI-powered friend.">
+<meta name="twitter:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="profile.css" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="card-container">
+        
+        <div class="profile-wrapper">
+            <div class="id-card">
+                <div class="card-top">
+                    <div class="card-top-header">
+                        <img src="logo.png" class="luvisa-logo-small">
+                        <span>Friendix Profile</span>
+                    </div>
+                </div>
+
+                <div id="avatarWrapper" class="avatar-wrapper">
+                    <img id="avatarPreview" src="avatars/default_avatar.png" class="avatar-preview" />
+                    <div class="avatar-overlay">
+                        <i class='bx bxs-camera'></i>
+                    </div>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;" />
+
+                <div class="card-bottom">
+                    <div class="user-details">
+                        <input id="displayNameInput" class="card-name" placeholder="Your Name" />
+                        <span id="earlyUserBadge" class="early-user-badge" style="display: none;">Early User</span>
+                        <textarea id="statusMessageInput" class="card-status" placeholder="Your Status"></textarea>
+                    </div>
+
+                    <div class="info-grid">
+                        <span>FRIENDSHIP EST.</span>
+                        <span id="friendshipYear">...</span> 
+                        <span>ID CODE</span>
+                        <span id="idCode">FRD-??????</span>
+                        <span>TEAM</span>
+                        <span>Friendix's Circle</span>
+                    </div>
+                    
+                    </div>
+            </div>
+
+            <p id="saveMessage" class="save-message"></p>
+            
+            <div class="button-group">
+                <button id="saveProfileBtn" class="primary-btn" style="display: none;"><span>Save Changes</span></button>
+                <button id="cancelBtn" class="secondary-btn">Back to Chat</button>
+            </div>
+        </div>
+
+        <div class="qr-wrapper" id="qrWrapper">
+            <h3>Share Your ID</h3>
+            <div id="qrCodeContainer" class="qr-code-container">
+                </div>
+            <button id="shareBtn" class="primary-btn share-btn">
+                <i class='bx bx-share-alt'></i> Share Link
+            </button>
+        </div>
+
+    </div>
+
+<script src="profile.js"></script>
+
+</body>
+
+</html>

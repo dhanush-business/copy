@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friendix Login</title>
+    <meta name="google-site-verification" content="6mJj6E39N-ihd-lAwxij3MIcwh8Z7b4XRJh8lzW8GFg" />
+    <meta name="description" content="Friendix.ai is your AI-powered friend that listens, supports, and chats with you — blending emotional intelligence with technology.">
+    <meta name="keywords" content="AI friend, Friendix, chatbot, AI companion, emotional support AI, friend-like AI, personal assistant">
+    <meta name="author" content="Dhanush">
+
+    <meta property="og:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+    <meta property="og:description" content="Chat with Friendix.ai — your AI companion that listens, cares, and helps.">
+    <meta property="og:url" content="https://friendix-ai.onrender.com">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+    <meta name="twitter:description" content="Meet Friendix.ai — your AI-powered friend.">
+    <meta name="twitter:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="logo.png">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Friendix.ai",
+      "url": "https://friendix-ai.onrender.com/",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Friendix.ai",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://friendix-ai.onrender.com/logo.png", 
+          "width": 192, 
+          "height": 192 
+        }
+      }
+    }
+    </script>
+    
+    <link rel="stylesheet" href="login.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="auth-container fade-in">
+        
+        <div class="form-header">
+            <img src="logo.png" class="luvisa-logo" alt="Luvisa">
+            <h2>Welcome to Friendix 💗<br>World</h2>
+        </div>
+
+        <div class="auth-box">
+
+            <!-- ✅ EMAIL -->
+            <div class="input-group">
+                <i class="bx bxs-user"></i>
+                <input type="email" id="loginEmail" placeholder="Email" required>
+            </div>
+
+            <!-- ✅ PASSWORD (single field + toggle icon) -->
+            <div class="input-group">
+                <i class="bx bxs-lock-alt"></i>
+                <input type="password" id="loginPass" placeholder="Password" required>
+                <i class="bx bx-hide toggle-pass" id="togglePass"></i>
+            </div>
+
+            <!-- ✅ Forgot Password -->
+            <div class="forgot-text">
+                <a href="forgot_password.html">Forgot password?</a>
+            </div>
+
+            
+            <!-- ✅ Login Button -->
+            <button id="loginBtn"><span>Login</span></button>
+
+            <p id="loginMsg" class="auth-message"></p>
+
+            <!-- ✅ Signup Link -->
+            <p class="auth-switch">
+                Don't have an account? <a href="signup.html">Sign up</a>
+            </p>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
+
+
+
+
+

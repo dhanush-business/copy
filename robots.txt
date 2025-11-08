@@ -1,0 +1,15 @@
+# robots.txt for Friendix.ai
+# This file tells search engines what to crawl and what not to.
+
+User-agent: *
+Allow: /
+
+# Disallow admin or sensitive routes (if any)
+Disallow: /admin
+Disallow: /api
+Disallow: /database
+Disallow: /static
+Disallow: /__pycache__/
+
+# Sitemap reference
+Sitemap: https://friendix-ai.onrender.com/sitemap.xml

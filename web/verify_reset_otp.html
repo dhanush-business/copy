@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP - Friendix.ai</title>
+  
+  <meta name="description" content="Friendix.ai is your AI-powered friend that listens, supports, and chats with you — blending emotional intelligence with technology.">
+  <meta name="keywords" content="AI friend, Friendix, chatbot, AI companion, emotional support AI, friend-like AI, personal assistant">
+  <meta name="author" content="Dhanush">
+  
+  <meta property="og:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+  <meta property="og:description" content="Chat with Friendix.ai — your AI companion that listens, cares, and helps.">
+  <meta property="og:url" content="https://friendix-ai.onrender.com">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Friendix.ai — Your AI Friend Who Truly Cares">
+  <meta name="twitter:description" content="Meet Friendix.ai — your AI-powered friend.">
+  <meta name="twitter:image" content="https://friendix-ai.onrender.com/assets/friendix-preview.png">
+
+  <link rel="icon" href="logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="logo.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Friendix.ai",
+    "url": "https://friendix-ai.onrender.com/",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Friendix.ai",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://friendix-ai.onrender.com/logo.png", 
+        "width": 192, 
+        "height": 192 
+      }
+    }
+  }
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="auth-box">
+<h2>Verify OTP ✅</h2>
+
+<input type="text" id="otp" placeholder="Enter OTP">
+<button onclick="verifyOTP()">Verify OTP</button>
+
+<p id="msg"></p>
+</div>
+
+<script>
+function verifyOTP() {
+    const email = localStorage.getItem("reset_email");
+    const otp = document.getElementById("otp").value;
+
+    fetch("/api/verify_reset_otp", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email, otp })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("msg").innerText = data.message;
+        if (data.success) {
+            setTimeout(()=>{ window.location = "reset_password.html"; }, 1200);
+        }
+    })
+}
+</script>
+</body>
+</html>
+
+
+
