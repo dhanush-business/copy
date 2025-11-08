@@ -1,0 +1,145 @@
+/* Simple styling for the together.html page */
+body {
+    background: linear-gradient(180deg, #0b0716 0%, #0f1630 100%);
+    color: var(--muted-white);
+    font-family: "Inter", "Segoe UI", system-ui;
+}
+
+.together-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.forms-view {
+    text-align: center;
+    background: rgba(20, 20, 48, 0.4);
+    border-radius: 16px;
+    padding: 30px;
+    backdrop-filter: blur(10px);
+}
+
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--muted-white);
+    text-decoration: none;
+    font-size: 0.9rem;
+    position: absolute;
+    top: 20px;
+    left: 20px;
+}
+.back-link:hover {
+    color: var(--accent);
+}
+
+.together-logo {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 10px;
+}
+
+h1 {
+    margin: 0;
+    color: #fff;
+}
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--muted-white);
+    margin-bottom: 30px;
+}
+
+.form-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+}
+
+.together-form {
+    flex: 1;
+    min-width: 300px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
+
+h2 {
+    color: #fff;
+    margin-top: 0;
+}
+
+.form-field {
+    text-align: left;
+    margin-bottom: 15px;
+}
+.form-field label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+.form-field input {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.form-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary-1), var(--primary-2));
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 180ms ease;
+}
+.form-button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 20px rgba(109, 93, 252, 0.3);
+}
+
+.error-message {
+    color: #ff7b7b;
+    font-size: 0.9rem;
+    min-height: 1.2em;
+    margin-top: 10px;
+}
+
+
+/* Chat View Styling */
+.chat-view {
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(16, 12, 34, 0.85);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Use existing styles from style.css for chat */
+.chat-view .chat-header {
+    display: flex;
+    position: static; /* Override sticky */
+}
+.chat-view .chatbox {
+    flex: 1;
+}
+.chat-view .input-area {
+    position: static; /* Override fixed */
+    transform: none;
+    width: 100%;
+    bottom: 0;
+    padding: 15px;
+}
+.chat-view .input-bar-container {
+    max-width: 100%;
+}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Friendix.ai - Together Space</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="together.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+    <div class="together-container">
+
+        <div id="formsView" class="forms-view">
+            <a href="/chat" class="back-link"><i class='bx bx-left-arrow-alt'></i> Back to Friendix</a>
+            <img src="logo.png" alt="Logo" class="together-logo">
+            <h1>Together Space</h1>
+            <p class="subtitle">Chat with friends and Luvisa in a private, temporary space (5 min).</p>
+
+            <div class="form-wrapper">
+                <form id="createSpaceForm" class="together-form">
+                    <h2>Create a Space</h2>
+                    <div class="form-field">
+                        <label for="createSpaceName">Space Name</label>
+                        <input type="text" id="createSpaceName" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="createSpacePassword">Password</label>
+                        <input type="password" id="createSpacePassword" required>
+                    </div>
+                    <button type="submit" class="form-button">Create</button>
+                    <p id="createError" class="error-message"></p>
+                </form>
+
+                <form id="joinSpaceForm" class="together-form">
+                    <h2>Join a Space</h2>
+                    <div class="form-field">
+                        <label for="joinSpaceName">Space Name</label>
+                        <input type="text" id="joinSpaceName" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="joinSpacePassword">Password</label>
+                        <input type="password" id="joinSpacePassword" required>
+                    </div>
+                    <button type="submit" class="form-button">Join</button>
+                    <p id="joinError" class="error-message"></p>
+                </form>
+            </div>
+        </div>
+
+        <div id="chatView" class="chat-view" style="display: none;">
+            <header class="chat-header">
+                <div class="left-header">
+                    <img src="logo.png" alt="Together" class="profile-pic" />
+                    <div class="chat-title">
+                        <span id="spaceNameHeader">Together Space</span>
+                        <small id="timerDisplay">Time remaining...</small>
+                    </div>
+                </div>
+            </header>
+
+            <main id="chatbox" class="chatbox" role="log" aria-live="polite"></main>
+
+            <div class="input-area" role="region" aria-label="Message input">
+               <div class="input-bar-container">
+                   <input id="userInput" type="text" placeholder="Send a message to the group..." autocomplete="off" />
+                   <button id="sendBtn" aria-label="Send message">
+                       <i class='bx bxs-send'></i>
+                   </button>
+               </div>
+            </div>
+            
+            <audio id="notifySound" src="notify.mp3" preload="auto"></audio>
+        </div>
+
+    </div>
+
+    <script src="together.js"></script>
+</body>
+</html>
