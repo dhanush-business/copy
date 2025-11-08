@@ -173,17 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- UPDATED FUNCTION ---
     async function sendMessage() {
         const text = userInput.value.trim();
         if (!text || !currentSpaceId) return;
 
         userInput.value = '';
-        // Note: We don't append the user's message here
-        // We let the `loadChatHistory` poll handle it
-        // This ensures all clients see the same history
-        
-        // Show a temporary typing bubble
-        const typing = showTypingBubble();
+        const typing = showTypingBubble(); // Show typing bubble
 
         try {
             const response = await fetch(`/api/together/chat`, {
@@ -191,16 +187,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ space_id: currentSpaceId, text: text })
             });
-            // We don't need the response, the poller will get the update
+
+            // Remove the typing bubble *after* fetch completes
+            if (typing?.parentNode) {
+                typing.parentNode.removeChild(typing);
+            }
+
+            if (!response.ok) {
+                // If server had an error, show it
+                const data = await response.json();
+                appendMessage('luvisa', data.message || "Sorry, an error occurred 😥");
+                return; // Stop here
+            }
             
-            // Immediately trigger a history load
+            // Success! Immediately trigger a history load
+            // The server already processed the message, so the poller will get it
             loadChatHistory();
             
         } catch (err) {
-            if (typing?.parentNode) typing.parentNode.removeChild(typing);
+            // Network error
+            if (typing?.parentNode) {
+                typing.parentNode.removeChild(typing);
+            }
             appendMessage('luvisa', "Sorry, connection trouble 😥");
+            console.error('Send network error:', err);
         }
     }
+    // --- END UPDATED FUNCTION ---
+
 
     // --- Helper Functions (copied from script.js) ---
     function appendMessage(type, text, atTime = null) {
