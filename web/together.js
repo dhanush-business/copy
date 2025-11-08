@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formsView = document.getElementById('formsView');
     const chatView = document.getElementById('chatView');
 
-    // --- Form Elements ---
+    // --- Form Elements (These are visible at start) ---
     const createSpaceForm = document.getElementById('createSpaceForm');
     const createSpaceName = document.getElementById('createSpaceName');
     const createSpacePassword = document.getElementById('createSpacePassword');
@@ -14,13 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const joinSpacePassword = document.getElementById('joinSpacePassword');
     const joinError = document.getElementById('joinError');
 
-    // --- Chat Elements ---
-    const chatbox = document.getElementById('chatbox');
-    const userInput = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const notifySound = document.getElementById('notifySound');
-    const spaceNameHeader = document.getElementById('spaceNameHeader');
-    const timerDisplay = document.getElementById('timerDisplay');
+    // --- Chat Elements (These will be defined LATER) ---
+    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay;
 
     // --- State ---
     let currentSpaceId = null;
@@ -45,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Success! Start the chat.
                 startChatSession(data.space_id, data.expires_at, name);
             } else {
                 createError.textContent = data.message || 'Failed to create space.';
@@ -70,7 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                // Success! Start the chat.
                 startChatSession(data.space_id, data.expires_at, name);
             } else {
                 joinError.textContent = data.message || 'Failed to join space.';
@@ -84,23 +77,34 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function startChatSession(spaceId, expiresAt, spaceName) {
         currentSpaceId = spaceId;
-        spaceExpiryTime = new Date(expiresAt * 1000); // Convert UNIX timestamp to JS Date
-        spaceNameHeader.textContent = spaceName;
+        spaceExpiryTime = new Date(expiresAt * 1000); 
 
         // Hide forms, show chat
         formsView.style.display = 'none';
         chatView.style.display = 'flex';
+
+        // --- THIS IS THE FIX ---
+        // Find the elements *AFTER* the chat view is visible
+        chatbox = document.getElementById('chatbox');
+        userInput = document.getElementById('userInput');
+        sendBtn = document.getElementById('sendBtn');
+        notifySound = document.getElementById('notifySound');
+        spaceNameHeader = document.getElementById('spaceNameHeader');
+        timerDisplay = document.getElementById('timerDisplay');
+        
+        spaceNameHeader.textContent = spaceName;
 
         // Add chat listeners
         sendBtn.addEventListener('click', sendMessage);
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+        // --- END OF FIX ---
 
         // Start timers and polling
         startTimers();
         loadChatHistory(); // Load history once
-        historyPollInterval = setInterval(loadChatHistory, 3000); // Poll every 3 seconds
+        historyPollInterval = setInterval(loadChatHistory, 3000); 
         
         userInput.focus();
     }
@@ -108,17 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function startTimers() {
         const totalDuration = 5 * 60 * 1000; // 5 minutes
 
-        // Warning timer (at 30 seconds left)
         setTimeout(() => {
             alert('This Together Space will close in 30 seconds!');
         }, totalDuration - 30000);
 
-        // Final shutdown timer
         setTimeout(() => {
             stopSession('Space expired. Thank you for chatting!');
         }, totalDuration);
 
-        // Countdown display timer
         timerInterval = setInterval(() => {
             const remaining = spaceExpiryTime.getTime() - Date.now();
             if (remaining <= 0) {
@@ -135,11 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
         clearInterval(historyPollInterval);
         clearInterval(timerInterval);
         alert(message);
-        window.location.href = 'together.html'; // Reload the page
+        window.location.href = 'together.html'; 
     }
 
     async function loadChatHistory() {
-        if (!currentSpaceId) return;
+        if (!currentSpaceId || !chatbox) return;
 
         try {
             const response = await fetch(`/api/together/history?space_id=${currentSpaceId}`);
@@ -153,19 +154,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (!data.success) return;
 
-            // Only re-render if message count changed
             if (data.history.length === lastMessageCount) return;
 
-            chatbox.innerHTML = ''; // Clear chatbox
+            chatbox.innerHTML = ''; 
             data.history.forEach(m => {
                 appendMessage(m.sender === 'user' ? 'user' : 'luvisa', m.message, m.time);
             });
             chatbox.scrollTop = chatbox.scrollHeight;
             lastMessageCount = data.history.length;
             
-            // Play sound if new message is from Luvisa
             if (data.history.length > 0 && data.history[data.history.length - 1].sender === 'luvisa') {
-                notifySound.play().catch(e => console.warn("Audio err:", e));
+                if(notifySound) notifySound.play().catch(e => console.warn("Audio err:", e));
             }
 
         } catch (err) {
@@ -173,13 +172,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- THIS FUNCTION IS NOW FIXED ---
     async function sendMessage() {
+        if (!userInput || !currentSpaceId) return; // Check if elements exist
+        
         const text = userInput.value.trim();
-        if (!text || !currentSpaceId) return;
+        if (!text) return;
 
         userInput.value = '';
-        const typing = showTypingBubble(); // Show typing bubble
+        const typing = showTypingBubble(); 
 
         try {
             const response = await fetch(`/api/together/chat`, {
@@ -188,24 +188,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ space_id: currentSpaceId, text: text })
             });
 
-            // Remove the typing bubble *after* fetch completes
             if (typing?.parentNode) {
                 typing.parentNode.removeChild(typing);
             }
 
             if (!response.ok) {
-                // If server had an error, show it
                 const data = await response.json();
                 appendMessage('luvisa', data.message || "Sorry, an error occurred 😥");
-                return; // Stop here
+                return; 
             }
             
-            // Success! Immediately trigger a history load
-            // The server already processed the message, so the poller will get it
             loadChatHistory();
             
         } catch (err) {
-            // Network error
             if (typing?.parentNode) {
                 typing.parentNode.removeChild(typing);
             }
@@ -213,17 +208,15 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Send network error:', err);
         }
     }
-    // --- END OF FIXED FUNCTION ---
 
-
-    // --- Helper Functions (copied from script.js) ---
     function appendMessage(type, text, atTime = null) {
+        if (!chatbox) return; // Check if chatbox exists
+        
         const wrapper = document.createElement('div'); 
         wrapper.className = `message ${type}-message`;
         
-        // In "Together" mode, all user messages are aligned left for simplicity
         if (type === 'user') {
-             wrapper.className = `message luvisa-message`; // Use 'luvisa' style for left-align
+             wrapper.className = `message luvisa-message`; 
         }
         
         const bubble = document.createElement('div'); 
@@ -237,7 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
         timeDiv.className = 'message-time'; 
         timeDiv.textContent = formatTime(atTime);
         
-        // Simple label for who sent it
         if (type === 'user') {
             msg.innerHTML = `<strong>A user:</strong><br>${text}`;
         }
@@ -262,6 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showTypingBubble() {
+        if (!chatbox) return; // Check if chatbox exists
+        
         const wrap = document.createElement('div'); 
         wrap.className = 'message luvisa-message typing-message';
         const bubble = document.createElement('div'); 
