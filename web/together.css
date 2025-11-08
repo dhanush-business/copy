@@ -132,17 +132,19 @@ h2 {
 }
 
 /* --- THIS IS THE FIX --- */
-.chat-view .chatbox {
-    display: flex; /* This overrides "display: none" from style.css */
-    flex: 1;
-    flex-direction: column; /* This was missing */
-    overflow-y: auto;     /* This was missing */
-    padding: 22px 26px 0; /* This was missing */
+/* We MUST use the #chatbox ID to override style.css */
+.chat-view #chatbox {  
+    display: flex; /* This overrides "display: none" */
+    flex: 1;       /* This makes it take all the space */
+    flex-direction: column; 
+    overflow-y: auto;     
+    padding: 22px 26px 0; 
 }
 
+/* This selector is correct and already works */
 .chat-view .input-area {
-    display: flex; /* This overrides "display: none" from style.css */
-    position: static; /* Override fixed */
+    display: flex; /* This overrides "display: none" */
+    position: static; 
     transform: none;
     width: 100%;
     bottom: 0;
