@@ -254,7 +254,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const dateStr = atTime.includes('T') ? atTime : atTime.replace(' ', 'T') + 'Z';
             const dt = new Date(dateStr);
-            if (isNaN(dt.getTime())) return atDmy.l.s.time;
+            if (isNaN(dt.getTime())) return atTime;
             return dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         } catch (e) {
             return atTime;
