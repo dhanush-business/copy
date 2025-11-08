@@ -130,16 +130,27 @@ h2 {
     display: flex;
     position: static; /* Override sticky */
 }
+
+/* --- THIS IS THE FIX --- */
 .chat-view .chatbox {
+    display: flex; /* This overrides "display: none" from style.css */
     flex: 1;
+    flex-direction: column; /* This was missing */
+    overflow-y: auto;     /* This was missing */
+    padding: 22px 26px 0; /* This was missing */
 }
+
 .chat-view .input-area {
+    display: flex; /* This overrides "display: none" from style.css */
     position: static; /* Override fixed */
     transform: none;
     width: 100%;
     bottom: 0;
     padding: 15px;
 }
+/* --- END OF FIX --- */
+
+
 .chat-view .input-bar-container {
     max-width: 100%;
 }
