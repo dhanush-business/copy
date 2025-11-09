@@ -30,6 +30,12 @@
                         <label for="createSpacePassword">Password</label>
                         <input type="password" id="createSpacePassword" required>
                     </div>
+
+                    <div class="form-field-checkbox">
+                        <input type="checkbox" id="createWithAI" checked>
+                        <label for="createWithAI">Invite Luvisa (AI) to the chat</label>
+                    </div>
+
                     <button type="submit" class="form-button">Create</button>
                     <p id="createError" class="error-message"></p>
                 </form>
@@ -59,7 +65,15 @@
                         <small id="timerDisplay">Time remaining...</small>
                     </div>
                 </div>
-            </header>
+                
+                <div class="right-header">
+                    <label class="ai-toggle" title="Toggle Luvisa's interaction">
+                        <span class="ai-toggle-label">Luvisa AI:</span>
+                        <input type="checkbox" id="aiToggleCheckbox">
+                        <span class="ai-toggle-slider"></span>
+                    </label>
+                </div>
+                </header>
 
             <main id="chatbox" class="chatbox" role="log" aria-live="polite"></main>
 
