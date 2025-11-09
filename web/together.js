@@ -26,6 +26,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const displayName = localStorage.getItem('luvisa_display_name') || 'A user';
 
+    // --- NEW: Set background as soon as page loads ---
+    setRandomBackground();
+
     // --- Form Event Listeners ---
     createSpaceForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -118,20 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
         loadChatHistory(); // Load history (and AI state)
         historyPollInterval = setInterval(loadChatHistory, 3000); 
         
-        setRandomBackground();
+        // Background is already set, so no need to call it again here
         
         userInput.focus();
     }
 
+    // --- UPDATED: Function to set background ---
     function setRandomBackground() {
-        const backgrounds = [ "backgrounds/bg1.jpg", "backgrounds/bg2.jpg", "backgrounds/bg3.jpg", "backgrounds/bg4.jpg", "backgrounds/bg5.jpg","backgrounds/bg6.jpg","backgrounds/bg7.jpg","backgrounds/bg8.jpg","backgrounds/bg10.jpg","backgrounds/bg12.jpg","backgrounds/bg13.jpg","backgrounds/bg14.jpg","backgrounds/bg15.jpg" ];
+        const backgrounds = [ "backgrounds/bg16.jpg","backgrounds/bg17.jpg" ];
         const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
         
-        const chatView = document.getElementById('chatView');
-        if (chatView) {
-            chatView.style.backgroundImage = `url('${randomBg}')`;
+        // --- UPDATED: Target the main container ---
+        const container = document.querySelector('.together-container');
+        if (container) {
+            container.style.backgroundImage = `url('${randomBg}')`;
         }
     }
+    // --- END UPDATED FUNCTION ---
 
     async function toggleAIState() {
         if (!currentSpaceId || !aiToggleCheckbox) return;
@@ -217,16 +223,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- THIS FUNCTION IS UPDATED ---
     async function sendMessage() {
         if (!userInput || !currentSpaceId) return; 
         const text = userInput.value.trim();
         if (!text) return;
 
-        // --- THIS IS THE FIX ---
-        // Add your message to the UI *immediately*
         appendMessage('user', text, null, displayName, true);
-        // --- END OF FIX ---
 
         userInput.value = '';
 
@@ -247,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; 
             }
             
-            // Call this to fetch the AI's reply and sync with other users
             loadChatHistory(); 
             
         } catch (err) {
@@ -255,7 +256,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Send network error:', err);
         }
     }
-    // --- END OF UPDATED FUNCTION ---
 
     function appendMessage(type, text, atTime = null, senderName = "A user", isMe = false) {
         if (!chatbox) return; 
