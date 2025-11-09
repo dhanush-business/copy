@@ -227,6 +227,7 @@ async function loadAndApplyProfile(user) {
         if (response.ok && data.success && data.profile) {
             const profile = data.profile;
             const displayName = profile.display_name || user.split('@')[0];
+            localStorage.setItem('luvisa_display_name', displayName); // <-- ADD THIS LINE
 
             if (profile.avatar) {
                 const avatarUrl = profile.avatar + '?t=' + new Date().getTime();
@@ -345,3 +346,4 @@ async function sendMessage() {
         console.error('Send network error:', err);
     }
 }
+
