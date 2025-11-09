@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'together.html'; 
     }
 
+    // --- UPDATED: To pass 'isMe' boolean ---
     async function loadChatHistory() {
         if (!currentSpaceId || !chatbox) return;
 
@@ -183,7 +184,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatbox.innerHTML = ''; 
             data.history.forEach(m => {
-                appendMessage(m.sender, m.message, m.time, m.sender_name);
+                // --- NEW: Check if this message is from the current user ---
+                const isMe = (m.sender === 'user' && m.sender_name === displayName);
+                
+                // --- NEW: Pass 'isMe' boolean to appendMessage ---
+                appendMessage(m.sender, m.message, m.time, m.sender_name, isMe);
             });
             chatbox.scrollTop = chatbox.scrollHeight;
             lastMessageCount = data.history.length;
@@ -237,22 +242,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- THIS FUNCTION IS UPDATED ---
-    function appendMessage(type, text, atTime = null, senderName = "A user") {
+    // --- UPDATED: Function signature and logic ---
+    function appendMessage(type, text, atTime = null, senderName = "A user", isMe = false) {
         if (!chatbox) return; 
         
         const wrapper = document.createElement('div'); 
-        wrapper.className = `message ${type}-message`;
         
-        if (type === 'user') {
-             wrapper.className = `message luvisa-message`; // Keep left-align
-             
-             // --- NEW: Create and add sender name label ---
+        // --- NEW: Logic to align messages ---
+        if (type === 'luvisa') {
+            wrapper.className = 'message luvisa-message'; // AI messages on left
+        } else if (isMe) {
+            wrapper.className = 'message user-message'; // My messages on right
+        } else {
+            wrapper.className = 'message luvisa-message'; // Other users on left
+        }
+        
+        // --- NEW: Only add name label if it's ANOTHER user ---
+        if (type === 'user' && !isMe) {
              const nameLabel = document.createElement('div');
              nameLabel.className = 'sender-name';
              nameLabel.textContent = senderName;
              wrapper.appendChild(nameLabel); // Add name label *before* the bubble
-             // --- END NEW ---
         }
         
         const bubble = document.createElement('div'); 
@@ -261,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = document.createElement('div'); 
         msg.className = 'message-text'; 
         
-        // --- UPDATED: User message no longer includes name ---
+        // --- UPDATED: Just set the text, name is handled above ---
         msg.textContent = text; 
         
         const timeDiv = document.createElement('div'); 
