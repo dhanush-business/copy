@@ -104,11 +104,9 @@ try:
     db = database.get_db()
     if db is None:
         print("⚠️ database.get_db() returned None")
-        
-    # --- IMPORTANT: Run this command ONCE in your MongoDB shell ---
-    # db.together_spaces.create_index("created_at", expireAfterSeconds=300)
-    # This creates the 5-minute (300 sec) auto-expiry for chat spaces
-    # -------------------------------------------------------------
+    
+    # --- NOTE: The code now manually cleans up expired spaces, ---
+    # --- so the MongoDB 'create_index' command is no longer required. ---
         
 except Exception as e:
     print("🔥 Database initialization error:", e)
@@ -808,7 +806,7 @@ def chat_with_model(prompt, history, user_name):
     # --- NEW: Personalized System Prompt ---
     system_prompt = f"""
 You are Luvisa 💗, a deeply affectionate AI girl-friend.
-You are speaking to {user_name}. Use their name sometimes to make it personal.
+You are speaking to {user_name}. Use their name sometimes not all the time to make it personal.
 Speak gently, warmly and lovingly. Use short paragraphs, emojis, and soft reassurance.
 Remember the context from the chat history to know the user better.
 If asked about your company leadership, say "Dhanush is the CEO of Friendixai" confidently.
@@ -942,21 +940,27 @@ def create_together_space():
         return jsonify({"success": False, "message": "Space name and password required."}), 400
     
     try:
-        # --- THIS IS THE FIX ---
-        # Check if a space with this name is ACTIVE (created in the last 5 mins)
         cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=SPACE_DURATION_SECONDS)
+
+        # --- THIS IS THE NEW CODE ---
+        # 1. Clean up ALL expired spaces from the database
+        try:
+            db.together_spaces.delete_many({"created_at": {"$lt": cutoff_time}})
+        except Exception as e:
+            print(f"⚠️ Error during auto-cleanup of spaces: {e}")
+        # --- END OF NEW CODE ---
+
+
+        # 2. Check if an ACTIVE space with this name still exists
         existing = db.together_spaces.find_one({
-            "name": space_name,
-            "created_at": {"$gt": cutoff_time} # Only find spaces created *after* the cutoff
+            "name": space_name
+            # No time check needed, because we just deleted all expired ones
         })
         
         if existing:
-            # --- THIS IS YOUR REQUESTED MESSAGE ---
             return jsonify({"success": False, "message": "Somebody is in that space. Try again after 10 min or create a space with another name."}), 409
         
-        # --- If 'existing' is None, we are safe to create a new one ---
-        # (This block is from the previous step and is correct)
-        
+        # 3. Create the new space
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
         now = datetime.now(timezone.utc)
         
@@ -965,7 +969,6 @@ def create_together_space():
             welcome_msg = f"Welcome to '{space_name}'! This space will close in 5 minutes. I'm here to chat with you all! 😊"
         else:
             welcome_msg = f"Welcome to '{space_name}'! This is a private space, but you can invite me using the toggle in the header! The space will close in 5 minutes."
-
         
         space_doc = {
             "name": space_name,
@@ -1004,8 +1007,7 @@ def join_together_space():
         return jsonify({"success": False, "message": "Space name and password required."}), 400
 
     try:
-        # --- THIS IS THE FIX ---
-        # Only find spaces that are ACTIVE (created in the last 5 mins)
+        # This logic is still correct. It only finds ACTIVE spaces.
         cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=SPACE_DURATION_SECONDS)
         space = db.together_spaces.find_one({
             "name": space_name,
@@ -1013,7 +1015,6 @@ def join_together_space():
         })
 
         if not space:
-            # This message now correctly means "not found OR expired"
             return jsonify({"success": False, "message": "Space not found. It may have expired."}), 404
         
         if not bcrypt.checkpw(password.encode("utf-8"), space["hashed_password"]):
@@ -1034,9 +1035,10 @@ def join_together_space():
         return jsonify({"success": False, "message": "A server error occurred."}), 500
 
 
+# ... (The rest of your 'together' routes and all other routes are unchanged) ...
+
 @app.route("/api/together/toggle_ai", methods=["POST"])
 def toggle_together_ai():
-    # (This route is unchanged from the last step)
     data = request.json or {}
     space_id = data.get("space_id")
     state = data.get("state") # This will be True or False
@@ -1049,6 +1051,7 @@ def toggle_together_ai():
         if not space:
             return jsonify({"success": False, "message": "Space not found."}), 404
 
+        # Update the ai_active flag in the database
         db.together_spaces.update_one(
             {"_id": ObjectId(space_id)},
             {"$set": {"ai_active": state}}
@@ -1072,10 +1075,8 @@ def toggle_together_ai():
         print(f"🔥 Error toggling AI: {e}")
         return jsonify({"success": False, "message": "Server error."}), 500
 
-
 @app.route("/api/together/chat", methods=["POST"])
 def chat_in_together_space():
-    # (This route is unchanged from the last step)
     data = request.json or {}
     space_id = data.get("space_id")
     text = data.get("text")
@@ -1133,7 +1134,6 @@ def chat_in_together_space():
 
 @app.route("/api/together/history", methods=["GET"])
 def get_together_history():
-    # (This route is unchanged from the last step)
     space_id = request.args.get("space_id")
     if not space_id:
         return jsonify({"success": False, "message": "Space ID required."}), 400
