@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formsView = document.getElementById('formsView');
     const chatView = document.getElementById('chatView');
 
-    // --- Form Elements (These are visible at start) ---
+    // --- Form Elements ---
     const createSpaceForm = document.getElementById('createSpaceForm');
     const createSpaceName = document.getElementById('createSpaceName');
     const createSpacePassword = document.getElementById('createSpacePassword');
@@ -14,8 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const joinSpacePassword = document.getElementById('joinSpacePassword');
     const joinError = document.getElementById('joinError');
 
-    // --- Chat Elements (These will be defined LATER) ---
-    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay;
+    // --- Chat Elements ---
+    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay, aiToggleCheckbox; 
 
     // --- State ---
     let currentSpaceId = null;
@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let historyPollInterval = null;
     let timerInterval = null;
     let lastMessageCount = 0;
+    
+    const displayName = localStorage.getItem('luvisa_display_name') || 'A user';
 
     // --- Form Event Listeners ---
     createSpaceForm.addEventListener('submit', async (e) => {
@@ -30,12 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
         createError.textContent = '';
         const name = createSpaceName.value;
         const password = createSpacePassword.value;
+        const withAI = document.getElementById('createWithAI').checked;
 
         try {
             const response = await fetch('/api/together/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ space_name: name, password: password })
+                body: JSON.stringify({ 
+                    space_name: name, 
+                    password: password, 
+                    with_ai: withAI 
+                })
             });
             const data = await response.json();
 
@@ -79,47 +86,61 @@ document.addEventListener('DOMContentLoaded', () => {
         currentSpaceId = spaceId;
         spaceExpiryTime = new Date(expiresAt * 1000); 
 
-        // Hide forms, show chat
         formsView.style.display = 'none';
         chatView.style.display = 'flex';
 
-        // --- THIS IS THE FIX ---
-        // Find the elements *AFTER* the chat view is visible
+        // Find elements *after* view is visible
         chatbox = document.getElementById('chatbox');
         userInput = document.getElementById('userInput');
         sendBtn = document.getElementById('sendBtn');
         notifySound = document.getElementById('notifySound');
         spaceNameHeader = document.getElementById('spaceNameHeader');
         timerDisplay = document.getElementById('timerDisplay');
+        aiToggleCheckbox = document.getElementById('aiToggleCheckbox');
+        
+        aiToggleCheckbox.addEventListener('change', toggleAIState);
         
         spaceNameHeader.textContent = spaceName;
 
-        // Add chat listeners
         sendBtn.addEventListener('click', sendMessage);
         userInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
-        // --- END OF FIX ---
 
-        // Start timers and polling
         startTimers();
-        loadChatHistory(); // Load history once
+        loadChatHistory(); // Load history (and AI state)
         historyPollInterval = setInterval(loadChatHistory, 3000); 
         
         userInput.focus();
     }
 
-    function startTimers() {
-        const totalDuration = 5 * 60 * 1000; // 5 minutes
+    async function toggleAIState() {
+        if (!currentSpaceId || !aiToggleCheckbox) return;
+        
+        const newState = aiToggleCheckbox.checked;
+        try {
+            await fetch('/api/together/toggle_ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    space_id: currentSpaceId,
+                    state: newState
+                })
+            });
+        } catch (err) {
+            console.error('Error toggling AI state:', err);
+            aiToggleCheckbox.checked = !newState;
+        }
+    }
 
+    function startTimers() {
+        const totalDuration = 5 * 60 * 1000; 
         setTimeout(() => {
             alert('This Together Space will close in 30 seconds!');
         }, totalDuration - 30000);
-
         setTimeout(() => {
             stopSession('Space expired. Thank you for chatting!');
         }, totalDuration);
-
         timerInterval = setInterval(() => {
             const remaining = spaceExpiryTime.getTime() - Date.now();
             if (remaining <= 0) {
@@ -154,11 +175,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (!data.success) return;
 
+            if (aiToggleCheckbox) {
+                aiToggleCheckbox.checked = data.ai_active;
+            }
+
             if (data.history.length === lastMessageCount) return;
 
             chatbox.innerHTML = ''; 
             data.history.forEach(m => {
-                appendMessage(m.sender === 'user' ? 'user' : 'luvisa', m.message, m.time);
+                appendMessage(m.sender, m.message, m.time, m.sender_name);
             });
             chatbox.scrollTop = chatbox.scrollHeight;
             lastMessageCount = data.history.length;
@@ -173,8 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function sendMessage() {
-        if (!userInput || !currentSpaceId) return; // Check if elements exist
-        
+        if (!userInput || !currentSpaceId) return; 
         const text = userInput.value.trim();
         if (!text) return;
 
@@ -185,7 +209,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`/api/together/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ space_id: currentSpaceId, text: text })
+                body: JSON.stringify({ 
+                    space_id: currentSpaceId, 
+                    text: text, 
+                    sender_name: displayName 
+                })
             });
 
             if (typing?.parentNode) {
@@ -209,14 +237,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function appendMessage(type, text, atTime = null) {
-        if (!chatbox) return; // Check if chatbox exists
+    // --- THIS FUNCTION IS UPDATED ---
+    function appendMessage(type, text, atTime = null, senderName = "A user") {
+        if (!chatbox) return; 
         
         const wrapper = document.createElement('div'); 
         wrapper.className = `message ${type}-message`;
         
         if (type === 'user') {
-             wrapper.className = `message luvisa-message`; 
+             wrapper.className = `message luvisa-message`; // Keep left-align
+             
+             // --- NEW: Create and add sender name label ---
+             const nameLabel = document.createElement('div');
+             nameLabel.className = 'sender-name';
+             nameLabel.textContent = senderName;
+             wrapper.appendChild(nameLabel); // Add name label *before* the bubble
+             // --- END NEW ---
         }
         
         const bubble = document.createElement('div'); 
@@ -224,22 +260,21 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const msg = document.createElement('div'); 
         msg.className = 'message-text'; 
-        msg.textContent = text;
+        
+        // --- UPDATED: User message no longer includes name ---
+        msg.textContent = text; 
         
         const timeDiv = document.createElement('div'); 
         timeDiv.className = 'message-time'; 
         timeDiv.textContent = formatTime(atTime);
-        
-        if (type === 'user') {
-            msg.innerHTML = `<strong>A user:</strong><br>${text}`;
-        }
 
         bubble.appendChild(msg);
         bubble.appendChild(timeDiv);
-        wrapper.appendChild(bubble);
+        wrapper.appendChild(bubble); // Add bubble *after* the name label
         chatbox.appendChild(wrapper);
         return wrapper;
     }
+    // --- END OF UPDATED FUNCTION ---
 
     function formatTime(atTime) {
         if (!atTime) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -254,7 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showTypingBubble() {
-        if (!chatbox) return; // Check if chatbox exists
+        if (!chatbox) return; 
         
         const wrap = document.createElement('div'); 
         wrap.className = 'message luvisa-message typing-message';
