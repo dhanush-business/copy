@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const joinError = document.getElementById('joinError');
 
     // --- Chat Elements ---
-    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay, aiToggleCheckbox, leaveSpaceBtn; // <-- leaveSpaceBtn added
+    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay, aiToggleCheckbox, leaveSpaceBtn; 
 
     // --- State ---
     let currentSpaceId = null;
@@ -97,16 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
         spaceNameHeader = document.getElementById('spaceNameHeader');
         timerDisplay = document.getElementById('timerDisplay');
         aiToggleCheckbox = document.getElementById('aiToggleCheckbox');
-        
-        // --- NEW: Find leave button and add listener ---
         leaveSpaceBtn = document.getElementById('leaveSpaceBtn');
+        
         leaveSpaceBtn.addEventListener('click', () => {
             if (confirm('Are you sure you want to leave this space?')) {
-                // Reloads the page, taking user back to the create/join screen
                 window.location.href = 'together.html'; 
             }
         });
-        // --- END NEW ---
         
         aiToggleCheckbox.addEventListener('change', toggleAIState);
         
@@ -121,7 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
         loadChatHistory(); // Load history (and AI state)
         historyPollInterval = setInterval(loadChatHistory, 3000); 
         
+        setRandomBackground();
+        
         userInput.focus();
+    }
+
+    function setRandomBackground() {
+        const backgrounds = [ "backgrounds/bg1.jpg", "backgrounds/bg2.jpg", "backgrounds/bg3.jpg", "backgrounds/bg4.jpg", "backgrounds/bg5.jpg","backgrounds/bg6.jpg","backgrounds/bg7.jpg","backgrounds/bg8.jpg","backgrounds/bg10.jpg","backgrounds/bg12.jpg","backgrounds/bg13.jpg","backgrounds/bg14.jpg","backgrounds/bg15.jpg" ];
+        const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+        
+        const chatView = document.getElementById('chatView');
+        if (chatView) {
+            chatView.style.backgroundImage = `url('${randomBg}')`;
+        }
     }
 
     async function toggleAIState() {
@@ -208,13 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- THIS FUNCTION IS UPDATED ---
     async function sendMessage() {
         if (!userInput || !currentSpaceId) return; 
         const text = userInput.value.trim();
         if (!text) return;
 
+        // --- THIS IS THE FIX ---
+        // Add your message to the UI *immediately*
+        appendMessage('user', text, null, displayName, true);
+        // --- END OF FIX ---
+
         userInput.value = '';
-        const typing = showTypingBubble(); 
 
         try {
             const response = await fetch(`/api/together/chat`, {
@@ -227,26 +241,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            if (typing?.parentNode) {
-                typing.parentNode.removeChild(typing);
-            }
-
             if (!response.ok) {
                 const data = await response.json();
                 appendMessage('luvisa', data.message || "Sorry, an error occurred 😥", null, "Luvisa 💗", false);
                 return; 
             }
             
-            loadChatHistory();
+            // Call this to fetch the AI's reply and sync with other users
+            loadChatHistory(); 
             
         } catch (err) {
-            if (typing?.parentNode) {
-                typing.parentNode.removeChild(typing);
-            }
             appendMessage('luvisa', "Sorry, connection trouble 😥", null, "Luvisa 💗", false);
             console.error('Send network error:', err);
         }
     }
+    // --- END OF UPDATED FUNCTION ---
 
     function appendMessage(type, text, atTime = null, senderName = "A user", isMe = false) {
         if (!chatbox) return; 
