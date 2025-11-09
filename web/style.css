@@ -460,7 +460,7 @@ button, input, textarea{font-family:inherit}
   }
   
   body.sidebar-open #chatPlaceholder {
-    width: calc(54vw - var(--sidebar-width));
+    width: calc(52vw - var(--sidebar-width));
     margin-left: var(--sidebar-width);
   }
 }
@@ -648,4 +648,5 @@ emoji-picker.show {
 #closeSidebarIcon {
   display: none;
 }
+
 
