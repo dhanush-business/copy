@@ -10,7 +10,7 @@ import hashlib # Keep for fallback
 from bson.objectid import ObjectId # Add this import
 from dotenv import load_dotenv
 load_dotenv()
-
+from datetime import timedelta
 import bcrypt
 import re
 import traceback
@@ -942,14 +942,24 @@ def create_together_space():
         return jsonify({"success": False, "message": "Space name and password required."}), 400
     
     try:
-        existing = db.together_spaces.find_one({"name": space_name})
+        # --- THIS IS THE FIX ---
+        # Check if a space with this name is ACTIVE (created in the last 5 mins)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=SPACE_DURATION_SECONDS)
+        existing = db.together_spaces.find_one({
+            "name": space_name,
+            "created_at": {"$gt": cutoff_time} # Only find spaces created *after* the cutoff
+        })
+        
         if existing:
-            return jsonify({"success": False, "message": "This space name is already taken. Try another."}), 409
+            # --- THIS IS YOUR REQUESTED MESSAGE ---
+            return jsonify({"success": False, "message": "Somebody is in that space. Try again after 10 min or create a space with another name."}), 409
+        
+        # --- If 'existing' is None, we are safe to create a new one ---
+        # (This block is from the previous step and is correct)
         
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
         now = datetime.now(timezone.utc)
         
-        # --- UPDATED Welcome Message ---
         welcome_msg = ""
         if with_ai:
             welcome_msg = f"Welcome to '{space_name}'! This space will close in 5 minutes. I'm here to chat with you all! 😊"
@@ -987,7 +997,6 @@ def create_together_space():
 
 @app.route("/api/together/join", methods=["POST"])
 def join_together_space():
-    # (This route is unchanged)
     data = request.json or {}
     space_name = data.get("space_name")
     password = data.get("password")
@@ -995,8 +1004,16 @@ def join_together_space():
         return jsonify({"success": False, "message": "Space name and password required."}), 400
 
     try:
-        space = db.together_spaces.find_one({"name": space_name})
+        # --- THIS IS THE FIX ---
+        # Only find spaces that are ACTIVE (created in the last 5 mins)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(seconds=SPACE_DURATION_SECONDS)
+        space = db.together_spaces.find_one({
+            "name": space_name,
+            "created_at": {"$gt": cutoff_time}
+        })
+
         if not space:
+            # This message now correctly means "not found OR expired"
             return jsonify({"success": False, "message": "Space not found. It may have expired."}), 404
         
         if not bcrypt.checkpw(password.encode("utf-8"), space["hashed_password"]):
@@ -1017,9 +1034,9 @@ def join_together_space():
         return jsonify({"success": False, "message": "A server error occurred."}), 500
 
 
-# --- NEW: ROUTE TO TOGGLE AI STATE ---
 @app.route("/api/together/toggle_ai", methods=["POST"])
 def toggle_together_ai():
+    # (This route is unchanged from the last step)
     data = request.json or {}
     space_id = data.get("space_id")
     state = data.get("state") # This will be True or False
@@ -1032,13 +1049,11 @@ def toggle_together_ai():
         if not space:
             return jsonify({"success": False, "message": "Space not found."}), 404
 
-        # Update the ai_active flag in the database
         db.together_spaces.update_one(
             {"_id": ObjectId(space_id)},
             {"$set": {"ai_active": state}}
         )
         
-        # Add a message to the chat to notify users
         now = datetime.now(timezone.utc)
         status_msg = "Luvisa (AI) has been turned ON." if state else "Luvisa (AI) has been turned OFF."
         notification_msg = {
@@ -1056,12 +1071,11 @@ def toggle_together_ai():
     except Exception as e:
         print(f"🔥 Error toggling AI: {e}")
         return jsonify({"success": False, "message": "Server error."}), 500
-# --- END NEW ROUTE ---
 
 
 @app.route("/api/together/chat", methods=["POST"])
 def chat_in_together_space():
-    # (This route is unchanged from the last fix)
+    # (This route is unchanged from the last step)
     data = request.json or {}
     space_id = data.get("space_id")
     text = data.get("text")
@@ -1119,6 +1133,7 @@ def chat_in_together_space():
 
 @app.route("/api/together/history", methods=["GET"])
 def get_together_history():
+    # (This route is unchanged from the last step)
     space_id = request.args.get("space_id")
     if not space_id:
         return jsonify({"success": False, "message": "Space ID required."}), 400
@@ -1130,7 +1145,6 @@ def get_together_history():
         
         history = space.get("history", [])
         
-        # --- UPDATED: Send sender_name AND ai_active status ---
         formatted = [{
             "sender": r["sender"], 
             "sender_name": r.get("sender_name", "Luvisa 💗" if r["sender"] == "luvisa" else "A user"),
@@ -1141,12 +1155,13 @@ def get_together_history():
         return jsonify({
             "success": True, 
             "history": formatted,
-            "ai_active": space.get("ai_active", True) # <-- ADDED THIS LINE
+            "ai_active": space.get("ai_active", True)
         }), 200
     
     except Exception as e:
         print(f"🔥 Error getting history: {e}")
         return jsonify({"success": False, "message": "Server error."}), 500
+    
 # -----------------------
 # Frontend routes
 # -----------------------
