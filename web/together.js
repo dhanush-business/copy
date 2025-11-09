@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const joinError = document.getElementById('joinError');
 
     // --- Chat Elements ---
-    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay, aiToggleCheckbox; 
+    let chatbox, userInput, sendBtn, notifySound, spaceNameHeader, timerDisplay, aiToggleCheckbox, leaveSpaceBtn; // <-- leaveSpaceBtn added
 
     // --- State ---
     let currentSpaceId = null;
@@ -98,6 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
         timerDisplay = document.getElementById('timerDisplay');
         aiToggleCheckbox = document.getElementById('aiToggleCheckbox');
         
+        // --- NEW: Find leave button and add listener ---
+        leaveSpaceBtn = document.getElementById('leaveSpaceBtn');
+        leaveSpaceBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to leave this space?')) {
+                // Reloads the page, taking user back to the create/join screen
+                window.location.href = 'together.html'; 
+            }
+        });
+        // --- END NEW ---
+        
         aiToggleCheckbox.addEventListener('change', toggleAIState);
         
         spaceNameHeader.textContent = spaceName;
@@ -160,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = 'together.html'; 
     }
 
-    // --- UPDATED: To pass 'isMe' boolean ---
     async function loadChatHistory() {
         if (!currentSpaceId || !chatbox) return;
 
@@ -184,10 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             chatbox.innerHTML = ''; 
             data.history.forEach(m => {
-                // --- NEW: Check if this message is from the current user ---
                 const isMe = (m.sender === 'user' && m.sender_name === displayName);
-                
-                // --- NEW: Pass 'isMe' boolean to appendMessage ---
                 appendMessage(m.sender, m.message, m.time, m.sender_name, isMe);
             });
             chatbox.scrollTop = chatbox.scrollHeight;
@@ -227,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!response.ok) {
                 const data = await response.json();
-                appendMessage('luvisa', data.message || "Sorry, an error occurred 😥");
+                appendMessage('luvisa', data.message || "Sorry, an error occurred 😥", null, "Luvisa 💗", false);
                 return; 
             }
             
@@ -237,32 +243,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typing?.parentNode) {
                 typing.parentNode.removeChild(typing);
             }
-            appendMessage('luvisa', "Sorry, connection trouble 😥");
+            appendMessage('luvisa', "Sorry, connection trouble 😥", null, "Luvisa 💗", false);
             console.error('Send network error:', err);
         }
     }
 
-    // --- UPDATED: Function signature and logic ---
     function appendMessage(type, text, atTime = null, senderName = "A user", isMe = false) {
         if (!chatbox) return; 
         
         const wrapper = document.createElement('div'); 
         
-        // --- NEW: Logic to align messages ---
         if (type === 'luvisa') {
-            wrapper.className = 'message luvisa-message'; // AI messages on left
+            wrapper.className = 'message luvisa-message'; 
         } else if (isMe) {
-            wrapper.className = 'message user-message'; // My messages on right
+            wrapper.className = 'message user-message'; 
         } else {
-            wrapper.className = 'message luvisa-message'; // Other users on left
+            wrapper.className = 'message luvisa-message'; 
         }
         
-        // --- NEW: Only add name label if it's ANOTHER user ---
         if (type === 'user' && !isMe) {
              const nameLabel = document.createElement('div');
              nameLabel.className = 'sender-name';
              nameLabel.textContent = senderName;
-             wrapper.appendChild(nameLabel); // Add name label *before* the bubble
+             wrapper.appendChild(nameLabel); 
         }
         
         const bubble = document.createElement('div'); 
@@ -270,8 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const msg = document.createElement('div'); 
         msg.className = 'message-text'; 
-        
-        // --- UPDATED: Just set the text, name is handled above ---
         msg.textContent = text; 
         
         const timeDiv = document.createElement('div'); 
@@ -280,11 +281,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bubble.appendChild(msg);
         bubble.appendChild(timeDiv);
-        wrapper.appendChild(bubble); // Add bubble *after* the name label
+        wrapper.appendChild(bubble); 
         chatbox.appendChild(wrapper);
         return wrapper;
     }
-    // --- END OF UPDATED FUNCTION ---
 
     function formatTime(atTime) {
         if (!atTime) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
