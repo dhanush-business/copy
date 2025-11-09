@@ -90,6 +90,23 @@ h2 {
     font-size: 1rem;
 }
 
+.form-field-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+.form-field-checkbox label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+}
+.form-field-checkbox input {
+    width: auto;
+    cursor: pointer;
+}
+
 .form-button {
     width: 100%;
     padding: 12px;
@@ -125,34 +142,102 @@ h2 {
     overflow: hidden;
 }
 
-/* Use existing styles from style.css for chat */
 .chat-view .chat-header {
     display: flex;
-    position: static; /* Override sticky */
+    position: static; 
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* --- THIS IS THE FIX --- */
-/* We MUST use the #chatbox ID to override style.css */
 .chat-view #chatbox {  
-    display: flex; /* This overrides "display: none" */
-    flex: 1;       /* This makes it take all the space */
+    display: flex; 
+    flex: 1;       
     flex-direction: column; 
     overflow-y: auto;     
     padding: 22px 26px 0; 
+    gap: 10px; /* This creates the space between messages */
 }
 
-/* This selector is correct and already works */
+/* --- THIS IS THE FIX --- */
+/* This rule forces the name and bubble to stack vertically */
+.chat-view .message.luvisa-message {
+    flex-direction: column;
+    align-items: flex-start; /* Keep it left-aligned */
+}
+/* --- END OF FIX --- */
+
+
 .chat-view .input-area {
-    display: flex; /* This overrides "display: none" */
+    display: flex; 
     position: static; 
     transform: none;
     width: 100%;
     bottom: 0;
     padding: 15px;
 }
-/* --- END OF FIX --- */
-
 
 .chat-view .input-bar-container {
     max-width: 100%;
+}
+
+/* AI TOGGLE SWITCH STYLES */
+.chat-view .right-header {
+    display: flex;
+    align-items: center;
+    padding-right: 15px;
+}
+
+.ai-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--muted-white);
+}
+
+.ai-toggle-label {
+    opacity: 0.7;
+}
+
+.ai-toggle input {
+    display: none; 
+}
+
+.ai-toggle-slider {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    transition: background-color 200ms ease;
+}
+
+.ai-toggle-slider::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform 200ms ease;
+}
+
+.ai-toggle input:checked + .ai-toggle-slider {
+    background-color: var(--primary-1);
+}
+
+.ai-toggle input:checked + .ai-toggle-slider::before {
+    transform: translateX(18px); 
+}
+
+/* STYLE FOR SENDER NAME LABEL */
+.luvisa-message .sender-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 10px;
+    margin-bottom: 2px;
 }
