@@ -936,11 +936,12 @@ def create_together_space():
     data = request.json or {}
     space_name = data.get("space_name")
     password = data.get("password")
+    with_ai = data.get("with_ai", True) 
+    
     if not space_name or not password:
         return jsonify({"success": False, "message": "Space name and password required."}), 400
     
     try:
-        # Check if space name is already taken (and not expired)
         existing = db.together_spaces.find_one({"name": space_name})
         if existing:
             return jsonify({"success": False, "message": "This space name is already taken. Try another."}), 409
@@ -948,13 +949,23 @@ def create_together_space():
         hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
         now = datetime.now(timezone.utc)
         
+        # --- UPDATED Welcome Message ---
+        welcome_msg = ""
+        if with_ai:
+            welcome_msg = f"Welcome to '{space_name}'! This space will close in 5 minutes. I'm here to chat with you all! 😊"
+        else:
+            welcome_msg = f"Welcome to '{space_name}'! This is a private space, but you can invite me using the toggle in the header! The space will close in 5 minutes."
+
+        
         space_doc = {
             "name": space_name,
             "hashed_password": hashed,
             "created_at": now,
+            "ai_active": with_ai, 
             "history": [{
                 "sender": "luvisa",
-                "message": f"Welcome to '{space_name}'! This space will close in 5 minutes. Let's chat! 😊",
+                "sender_name": "Luvisa 💗",
+                "message": welcome_msg,
                 "timestamp": now
             }]
         }
@@ -976,6 +987,7 @@ def create_together_space():
 
 @app.route("/api/together/join", methods=["POST"])
 def join_together_space():
+    # (This route is unchanged)
     data = request.json or {}
     space_name = data.get("space_name")
     password = data.get("password")
@@ -987,7 +999,6 @@ def join_together_space():
         if not space:
             return jsonify({"success": False, "message": "Space not found. It may have expired."}), 404
         
-        # Check password
         if not bcrypt.checkpw(password.encode("utf-8"), space["hashed_password"]):
             return jsonify({"success": False, "message": "Invalid password."}), 401
         
@@ -1005,49 +1016,105 @@ def join_together_space():
         print(f"🔥 Error joining space: {e}")
         return jsonify({"success": False, "message": "A server error occurred."}), 500
 
+
+# --- NEW: ROUTE TO TOGGLE AI STATE ---
+@app.route("/api/together/toggle_ai", methods=["POST"])
+def toggle_together_ai():
+    data = request.json or {}
+    space_id = data.get("space_id")
+    state = data.get("state") # This will be True or False
+
+    if not space_id or state is None:
+        return jsonify({"success": False, "message": "Space ID and state required."}), 400
+
+    try:
+        space = db.together_spaces.find_one({"_id": ObjectId(space_id)})
+        if not space:
+            return jsonify({"success": False, "message": "Space not found."}), 404
+
+        # Update the ai_active flag in the database
+        db.together_spaces.update_one(
+            {"_id": ObjectId(space_id)},
+            {"$set": {"ai_active": state}}
+        )
+        
+        # Add a message to the chat to notify users
+        now = datetime.now(timezone.utc)
+        status_msg = "Luvisa (AI) has been turned ON." if state else "Luvisa (AI) has been turned OFF."
+        notification_msg = {
+            "sender": "luvisa",
+            "sender_name": "Luvisa 💗",
+            "message": status_msg,
+            "timestamp": now
+        }
+        db.together_spaces.update_one(
+            {"_id": ObjectId(space_id)},
+            {"$push": {"history": notification_msg}}
+        )
+
+        return jsonify({"success": True, "message": "AI state updated."}), 200
+    except Exception as e:
+        print(f"🔥 Error toggling AI: {e}")
+        return jsonify({"success": False, "message": "Server error."}), 500
+# --- END NEW ROUTE ---
+
+
 @app.route("/api/together/chat", methods=["POST"])
 def chat_in_together_space():
+    # (This route is unchanged from the last fix)
     data = request.json or {}
     space_id = data.get("space_id")
     text = data.get("text")
+    sender_name = data.get("sender_name") or "A user" 
+    
     if not space_id or not text:
         return jsonify({"success": False, "message": "Space ID and text required."}), 400
     
     try:
         now = datetime.now(timezone.utc)
-        user_message = {"sender": "user", "message": text, "timestamp": now}
+        user_message = {
+            "sender": "user", 
+            "sender_name": sender_name, 
+            "message": text, 
+            "timestamp": now
+        }
         
-        # Find the space
         space = db.together_spaces.find_one({"_id": ObjectId(space_id)})
         if not space:
             return jsonify({"success": False, "message": "Space not found or expired."}), 404
         
-        # Add user message
         db.together_spaces.update_one(
             {"_id": ObjectId(space_id)},
             {"$push": {"history": user_message}}
         )
         
-        # Get history for AI
-        history_docs = space.get("history", [])
-        history = [{"sender": r.get("sender"), "message": r.get("message", "")} for r in history_docs]
-        history.append({"sender": "user", "message": text}) # Add current message
+        if space.get("ai_active", True):
+            history_docs_with_new_msg = list(db.together_spaces.find_one(
+                {"_id": ObjectId(space_id)}, 
+                {"history": 1}
+            ).get("history", []))
+
+            history = [{"sender": r.get("sender"), "message": r.get("message", "")} for r in history_docs_with_new_msg]
+            
+            reply = chat_with_model(text, history, sender_name)
+            enhanced = add_emojis_to_response(reply)
+            
+            ai_message = {
+                "sender": "luvisa", 
+                "sender_name": "Luvisa 💗",
+                "message": enhanced, 
+                "timestamp": datetime.now(timezone.utc)
+            }
+            db.together_spaces.update_one(
+                {"_id": ObjectId(space_id)},
+                {"$push": {"history": ai_message}}
+            )
         
-        # Call AI (using "The Group" as the user name)
-        reply = chat_with_model(text, history, "my friends")
-        enhanced = add_emojis_to_response(reply)
-        
-        # Add AI message
-        ai_message = {"sender": "luvisa", "message": enhanced, "timestamp": datetime.now(timezone.utc)}
-        db.together_spaces.update_one(
-            {"_id": ObjectId(space_id)},
-            {"$push": {"history": ai_message}}
-        )
-        
-        return jsonify({"success": True, "reply": enhanced}), 200
+        return jsonify({"success": True, "message": "Message sent."}), 200
 
     except Exception as e:
         print(f"🔥 Error in together chat: {e}")
+        traceback.print_exc() 
         return jsonify({"success": False, "message": "Server error."}), 500
 
 @app.route("/api/together/history", methods=["GET"])
@@ -1062,19 +1129,24 @@ def get_together_history():
             return jsonify({"success": False, "message": "Space not found or expired."}), 404
         
         history = space.get("history", [])
+        
+        # --- UPDATED: Send sender_name AND ai_active status ---
         formatted = [{
             "sender": r["sender"], 
+            "sender_name": r.get("sender_name", "Luvisa 💗" if r["sender"] == "luvisa" else "A user"),
             "message": r["message"], 
             "time": r.get("timestamp").strftime("%Y-%m-%d %H:%M:%S") if r.get("timestamp") else ""
         } for r in history]
         
-        return jsonify({"success": True, "history": formatted}), 200
+        return jsonify({
+            "success": True, 
+            "history": formatted,
+            "ai_active": space.get("ai_active", True) # <-- ADDED THIS LINE
+        }), 200
     
     except Exception as e:
         print(f"🔥 Error getting history: {e}")
         return jsonify({"success": False, "message": "Server error."}), 500
-
-
 # -----------------------
 # Frontend routes
 # -----------------------
