@@ -31,6 +31,8 @@ body {
     justify-content: center;
     align-items: center;
     box-sizing: border-box; 
+    /* --- NEW: Add scroll for small phones --- */
+    overflow-y: auto;
 }
 
 .back-link {
@@ -76,6 +78,7 @@ h1 {
     backdrop-filter: blur(10px);
     padding: 30px;
     border-radius: 16px;
+    box-sizing: border-box; /* --- NEW: Ensure padding is inside --- */
 }
 
 .together-form {
@@ -288,4 +291,76 @@ h2 {
     color: rgba(255, 255, 255, 0.6);
     margin-left: 10px;
     margin-bottom: 2px;
+}
+
+
+/* --- RESPONSIVE OPTIMIZATIONS --- */
+
+/* Tablet view */
+@media (max-width: 768px) {
+    .form-wrapper {
+        /* Remove the glass box and make it fill width */
+        background: transparent;
+        backdrop-filter: none;
+        max-width: 500px;
+        padding: 10px;
+    }
+}
+
+/* Mobile view */
+@media (max-width: 480px) {
+    .forms-view {
+        padding: 10px; /* Slim down padding */
+    }
+    
+    .form-wrapper {
+        padding: 5px; /* Slim down padding */
+    }
+    
+    .together-form {
+        min-width: unset; /* Let form shrink */
+    }
+
+    /* --- Chat Header --- */
+    .chat-view .left-header {
+        gap: 8px;
+    }
+    .chat-view .profile-pic {
+        width: 40px;
+        height: 40px;
+    }
+    .chat-view .chat-title span {
+        font-size: 0.95rem;
+    }
+    .chat-view .chat-title small {
+        font-size: 0.75rem;
+    }
+    
+    .chat-view .right-header {
+        gap: 8px;
+        padding-right: 10px;
+    }
+
+    /* Hide the "Leave" text */
+    .leave-space-btn span {
+        display: none;
+    }
+    .leave-space-btn {
+        padding: 8px; /* Make it squarer */
+        border-radius: 50%; /* Make it round */
+    }
+    
+    /* Hide the "Luvisa AI:" text */
+    .ai-toggle-label {
+        display: none;
+    }
+
+    /* --- Chat Content --- */
+    .chat-view #chatbox {  
+        padding: 15px 10px 0; /* Slim down padding */
+    }
+    .chat-view .input-area {
+        padding: 8px 10px; /* Slim down padding */
+    }
+
 }
